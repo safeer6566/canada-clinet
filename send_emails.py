@@ -1,6 +1,7 @@
 import os
 import base64
 import time
+import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
@@ -11,10 +12,10 @@ CLIENT_SECRET = os.environ.get("GMAIL_CLIENT_SECRET")
 REFRESH_TOKEN = os.environ.get("GMAIL_REFRESH_TOKEN")
 SPREADSHEET_ID = os.environ.get("SHEET_ID")
 
-# Exact Tab Name from Google Sheet
+# Sheet Tab Name
 TAB_NAME = "unsubscribed_members_export_670"
 
-# Daily Limit set to 100 emails
+# Daily Limit
 MAX_DAILY_EMAILS = 100
 
 def get_services():
@@ -60,12 +61,12 @@ def send_and_track_emails():
             if not email:
                 continue
 
-            # Skip already processed contacts
+            # Skip processed contacts
             if status.upper() in ["SENT", "OPENED"]:
                 print(f"⏩ Skipped (Already Status: {status}): {email}")
                 continue
 
-            # Handle Name: Agar First Name blank ho to greeting hi nahi aayegi
+            # Name Check: Agar blank ho to greeting mention nahi hogi
             full_name = f"{first_name} {last_name}".strip()
             if full_name:
                 greeting_html = f'<h2 style="font-size: 22px; color: #1a1a1a; margin-top: 0;">Hi <strong>{full_name}</strong>,</h2>'
@@ -74,7 +75,7 @@ def send_and_track_emails():
 
             subject = "High-Quality 3D Product Animation & Rendering"
 
-            # Large Font & Clear Formatting (18px Text Size)
+            # Short & Concise Clean HTML Template
             html_body = f"""
             <!DOCTYPE html>
             <html>
@@ -86,29 +87,29 @@ def send_and_track_emails():
                 
                 {greeting_html}
                 
-                <p style="font-size: 18px;">I am a <strong>Professional 3D Artist</strong> specializing in Blender, and I help brands and online stores turn their products into premium, eye-catching 3D visuals or custom work related to 3D.</p>
+                <p style="font-size: 18px;">I am a <strong>Professional 3D Artist</strong> specializing in Blender.</p>
                 
                 <h3 style="font-size: 20px; color: #0056b3; margin-top: 25px; margin-bottom: 12px;"><strong>My Services Include:</strong></h3>
-                <ul style="font-size: 18px; padding-left: 25px; margin-top: 0; line-height: 2.0;">
+                <ol style="font-size: 18px; padding-left: 25px; margin-top: 0; line-height: 2.0;">
                   <li><strong>3D Product Modeling</strong></li>
                   <li><strong>Photorealistic Product Rendering</strong> for Website / Amazon / E-commerce</li>
-                  <li><strong>3D Product Animation</strong> (Product reveal, 360 rotation)</li>
-                  <li><strong>NFT Collection Design & 3D Animation</strong></li>
+                  <li><strong>3D Product Animation</strong> (product reveal, rotation)</li>
+                  <li><strong>NFT Collection Design and 3D Animation</strong></li>
                   <li><strong>3D Logo Animation & Mockups</strong></li>
                   <li><strong>Architectural Visualization</strong> (Interior / Exterior)</li>
                   <li><strong>3D Explainer Videos</strong></li>
-                </ul>
+                  <li><strong>3D Videos for Youtube or Social Channels</strong></li>
+                </ol>
                 
                 <div style="background-color: #eef6ff; border-left: 6px solid #0056b3; padding: 20px; margin: 25px 0; border-radius: 6px;">
-                  <p style="margin: 0; color: #003366; font-size: 20px; font-weight: bold;">Free Sample Offer:</p>
-                  <p style="margin: 8px 0 0 0; font-size: 18px; color: #111111;">I'd love to show you what I can do. I'm happy to create a <strong>free sample render</strong> of one of your products with no obligation, so you can see the quality for yourself before deciding anything.</p>
+                  <p style="margin: 0; color: #111111; font-size: 18px;">I'm happy to create a <strong>free sample render</strong> of one of your products, no obligation, so you can see the quality for yourself before deciding anything.</p>
                 </div>
 
                 <div style="text-align: center; margin: 35px 0;">
-                  <a href="https://wa.link/u4hb6v" style="background-color: #25D366; color: #ffffff; padding: 15px 30px; text-decoration: none; font-size: 20px; font-weight: bold; border-radius: 6px; display: inline-block;">Message on WhatsApp (+92 348 0639328)</a>
+                  <a href="https://wa.link/u4hb6v" style="background-color: #25D366; color: #ffffff; padding: 15px 30px; text-decoration: none; font-size: 20px; font-weight: bold; border-radius: 6px; display: inline-block;">Message on WhatsApp (+92-348-0639328)</a>
                 </div>
 
-                <p style="font-size: 18px;">You can also check out my portfolio here: <a href="https://www.fiverr.com/safeer5d" style="color: #0056b3; font-weight: bold; text-decoration: underline;">Fiverr Portfolio</a></p>
+                <p style="font-size: 18px;">Portfolio: <a href="https://www.fiverr.com/safeer5d" style="color: #0056b3; font-weight: bold; text-decoration: underline;">https://www.fiverr.com/safeer5d</a></p>
                 
                 <p style="font-size: 18px;">Looking forward to working with you!</p>
                 
@@ -140,7 +141,7 @@ def send_and_track_emails():
                     body={'raw': raw_message}
                 ).execute()
 
-                # 2. Update Column D (Merge Status) to "SENT"
+                # 2. Update Status to "SENT" in Sheet
                 row_num = i + 1
                 sheets_svc.spreadsheets().values().update(
                     spreadsheetId=SPREADSHEET_ID,
@@ -152,10 +153,13 @@ def send_and_track_emails():
                 sent_count += 1
                 print(f"✅ [{sent_count}/{MAX_DAILY_EMAILS}] Sent to {email} & marked SENT in sheet.")
 
+                # Random delay between 60 to 120 seconds (1 to 2 minutes)
+                delay = random.randint(60, 120)
+                print(f"⏳ Waiting {delay} seconds before sending next email...")
+                time.sleep(delay)
+
             except Exception as send_err:
                 print(f"❌ Failed to send to {email}: {send_err}")
-
-            time.sleep(1)
 
         if sent_count == 0:
             print("ℹ️ No un-sent emails found. All rows are already SENT or OPENED.")
