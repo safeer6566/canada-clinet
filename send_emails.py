@@ -11,6 +11,9 @@ CLIENT_SECRET = os.environ.get("GMAIL_CLIENT_SECRET")
 REFRESH_TOKEN = os.environ.get("GMAIL_REFRESH_TOKEN")
 SPREADSHEET_ID = os.environ.get("SHEET_ID")
 
+# Testing Limit
+MAX_TEST_EMAILS = 2
+
 def get_services():
     creds = Credentials(
         token=None,
@@ -27,7 +30,6 @@ def send_and_track_emails():
     try:
         gmail_svc, sheets_svc = get_services()
 
-        # Sheet1 se Column A se D ka data fetch karein
         sheet = sheets_svc.spreadsheets()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:D").execute()
         rows = result.get('values', [])
@@ -37,9 +39,15 @@ def send_and_track_emails():
             return
 
         print(f"🔹 Total rows found: {len(rows) - 1}")
+        
+        sent_count = 0
 
-        # Row 1 Headers (Email, First Name, Last Name, Status)
         for i in range(1, len(rows)):
+            # Agar 2 emails chali gayi hain toh loop stop kar do
+            if sent_count >= MAX_TEST_EMAILS:
+                print(f"🛑 Test Limit reached! ({MAX_TEST_EMAILS} emails sent). Stopping bot.")
+                break
+
             row = rows[i]
 
             email = row[0].strip() if len(row) > 0 and row[0] else ""
@@ -50,16 +58,15 @@ def send_and_track_emails():
             if not email:
                 continue
 
-            # Duplicate email se bachne ke liye SKIP
             if status.upper() == "SENT":
                 print(f"⏩ Skipped (Already Sent): {email}")
                 continue
 
             name = f"{first_name} {last_name}".strip() or "Valued Client"
 
-            # Custom Email Text
-            subject = "Testing Automation Bot"
-            body = f"Hi {name},\n\nYeh aapki automated testing email hai. Google Sheets aur Gmail integration perfectly kaam kar raha hai!\n\nBest regards,\nAutomation Bot"
+            # Custom Test Message
+            subject = "Test Email from Automation Bot"
+            body = f"Hi {name},\n\nYeh automated testing email hai. Sheet aur Gmail API testing test run kar rahe hain.\n\nBest regards,\nAutomation Bot"
 
             message = MIMEMultipart()
             message['to'] = email
@@ -69,13 +76,13 @@ def send_and_track_emails():
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
 
             try:
-                # 1. Email Send
+                # 1. Send Email
                 gmail_svc.users().messages().send(
                     userId='me',
                     body={'raw': raw_message}
                 ).execute()
 
-                # 2. Sheet Status Update -> "SENT"
+                # 2. Mark "SENT" in Sheet
                 row_num = i + 1
                 sheets_svc.spreadsheets().values().update(
                     spreadsheetId=SPREADSHEET_ID,
@@ -84,10 +91,11 @@ def send_and_track_emails():
                     body={"values": [["SENT"]]}
                 ).execute()
 
-                print(f"✅ Success: Email sent to {email} & status updated to SENT.")
+                sent_count += 1
+                print(f"✅ [{sent_count}/{MAX_TEST_EMAILS}] Sent to {email} & marked SENT in sheet.")
 
             except Exception as send_err:
-                print(f"❌ Failed to send email to {email}: {send_err}")
+                print(f"❌ Failed to send to {email}: {send_err}")
 
             time.sleep(1)
 
