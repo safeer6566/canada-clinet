@@ -20,14 +20,13 @@ def send_test_emails():
         # Sirf pehle 3 clients select karein
         df_test = df.head(3)
         
-        # Clean password (remove spaces)
+        # App Password se spaces remove karein
         clean_password = EMAIL_PASSWORD.replace(" ", "") if EMAIL_PASSWORD else ""
 
-        # Single SMTP connection start karein
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
+        # Port 465 (SSL) connection use karein
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(EMAIL_USER, clean_password)
-        print("✅ Connected to Gmail SMTP server successfully.")
+        print("✅ Connected to Gmail SSL SMTP server successfully.")
 
         for index, row in df_test.iterrows():
             email = row.get("Email Address")
@@ -57,7 +56,7 @@ def send_test_emails():
                 except Exception as e:
                     print(f"❌ Failed to send email to {to_email}: {e}")
                 
-                # 2 Seconds delay taake connection close na ho
+                # 2 Seconds delay
                 time.sleep(2)
 
         # Connection close karein
