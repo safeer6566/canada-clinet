@@ -1,16 +1,13 @@
-name: Automated Email Sender Bot
+name: Bulk Email Automation
 
 on:
-  workflow_dispatch: # Manual Run button ke liye
-  schedule:
-    - cron: '0 9 * * *' # Rozana automatically chalane ke liye
+  workflow_dispatch:  # Manual trigger ke liye
 
 jobs:
   send-emails:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -18,13 +15,15 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install Google API Dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install google-api-python-client google-auth-oauthlib
 
-      - name: Run Email Bot
+      - name: Run Email Automation Script
         env:
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
           SHEET_ID: ${{ secrets.SHEET_ID }}
         run: python send_emails.py
