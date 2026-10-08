@@ -8,7 +8,7 @@ EMAIL_USER = os.environ.get("EMAIL_USER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 SHEET_ID = os.environ.get("SHEET_ID")
 
-# Google Sheet URL (CSV Format)
+# Google Sheet CSV URL
 sheet_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
 
 def send_email(to_email, client_name):
@@ -24,7 +24,6 @@ def send_email(to_email, client_name):
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        # Spaces remove kar ke login karein
         server.login(EMAIL_USER, EMAIL_PASSWORD.replace(" ", ""))
         server.sendmail(EMAIL_USER, to_email, msg.as_string())
         server.quit()
@@ -34,14 +33,22 @@ def send_email(to_email, client_name):
 
 if __name__ == "__main__":
     try:
+        # Sheet madhun data read kara
         df = pd.read_csv(sheet_url)
         
-        # Check karein ke Name aur Email column maujood hain
+        # Google sheet madhil exact column headers
         for index, row in df.iterrows():
-            email = row.get("Email")
-            name = row.get("Name", "Client")
+            email = row.get("Email Address")
+            first_name = row.get("First Name", "")
+            last_name = row.get("Last Name", "")
             
-            if pd.notna(email):
-                send_email(str(email).strip(), str(name).strip())
+            # Nav ekatra kara
+            name = f"{first_name} {last_name}".strip()
+            if not name:
+                name = "Client"
+
+            if pd.notna(email) and str(email).strip():
+                send_email(str(email).strip(), name)
+                
     except Exception as e:
-        print(f"❌ Google Sheet read karne mein error aaya: {e}")
+        print(f"❌ Google Sheet read kartana error aala: {e}")
