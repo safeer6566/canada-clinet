@@ -27,7 +27,7 @@ def send_and_track_emails():
     try:
         gmail_svc, sheets_svc = get_services()
 
-        # Sheet1 se A se D tak ka data fetch karein
+        # Sheet1 se Column A se D ka data fetch karein
         sheet = sheets_svc.spreadsheets()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A:D").execute()
         rows = result.get('values', [])
@@ -38,7 +38,7 @@ def send_and_track_emails():
 
         print(f"🔹 Total rows found: {len(rows) - 1}")
 
-        # Row 1 headers hain, isliye loop index 1 se shuru hoga
+        # Row 1 Headers (Email, First Name, Last Name, Status)
         for i in range(1, len(rows)):
             row = rows[i]
 
@@ -47,18 +47,17 @@ def send_and_track_emails():
             last_name = row[2].strip() if len(row) > 2 and row[2] else ""
             status = row[3].strip() if len(row) > 3 and row[3] else ""
 
-            # Agar email empty ho toh next row par jayein
             if not email:
                 continue
 
-            # Agar status SENT ho toh duplicate email na bhejein
+            # Duplicate email se bachne ke liye SKIP
             if status.upper() == "SENT":
                 print(f"⏩ Skipped (Already Sent): {email}")
                 continue
 
             name = f"{first_name} {last_name}".strip() or "Valued Client"
 
-            # Email Content Setup
+            # Custom Email Text
             subject = "Testing Automation Bot"
             body = f"Hi {name},\n\nYeh aapki automated testing email hai. Google Sheets aur Gmail integration perfectly kaam kar raha hai!\n\nBest regards,\nAutomation Bot"
 
@@ -70,13 +69,13 @@ def send_and_track_emails():
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
 
             try:
-                # 1. Email bhejein
+                # 1. Email Send
                 gmail_svc.users().messages().send(
                     userId='me',
                     body={'raw': raw_message}
                 ).execute()
 
-                # 2. Sheet ke Column D mein "SENT" mark karein
+                # 2. Sheet Status Update -> "SENT"
                 row_num = i + 1
                 sheets_svc.spreadsheets().values().update(
                     spreadsheetId=SPREADSHEET_ID,
