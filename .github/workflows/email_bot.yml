@@ -1,7 +1,9 @@
 name: Bulk Email Automation
 
 on:
-  workflow_dispatch:  # Manual trigger ke liye
+  workflow_dispatch:  # Manual trigger ke liye (jab bhi khud chalana ho)
+  schedule:
+    - cron: '0 0 * * *'  # Har rooz UTC 00:00 (Pakistan time 5:00 AM PKT) par auto-run
 
 jobs:
   send-emails:
