@@ -1,0 +1,30 @@
+name: Automated Email Sender Bot
+
+on:
+  workflow_dispatch: # Manual Run button ke liye
+  schedule:
+    - cron: '0 9 * * *' # Rozana automatically chalane ke liye
+
+jobs:
+  send-emails:
+    runs-runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas requests
+
+      - name: Run Email Bot
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: python send_emails.py
