@@ -7,7 +7,7 @@ on:
 
 jobs:
   send-emails:
-    runs-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -20,7 +20,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pandas requests
+          pip install -r requirements.txt
 
       - name: Run Email Bot
         env:
